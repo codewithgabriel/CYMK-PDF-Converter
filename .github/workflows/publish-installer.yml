@@ -1,0 +1,28 @@
+name: Publish Windows download
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download tested Windows installer
+        uses: actions/download-artifact@v4
+        with:
+          name: Inkwell-Windows-x64-installer
+          path: installer
+          run-id: 41843041219
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish direct installer download
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s installer/Inkwell_0.1.0_x64-setup.exe
+          (cd installer && sha256sum Inkwell_0.1.0_x64-setup.exe > SHA256SUMS.txt)
+          gh release upload v0.1.0 installer/Inkwell_0.1.0_x64-setup.exe installer/SHA256SUMS.txt --clobber
+          gh release edit v0.1.0 --draft=false --latest
