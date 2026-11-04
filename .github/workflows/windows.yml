@@ -1,0 +1,32 @@
+name: Windows installer
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - name: Bundle verified Ghostscript runtime
+        shell: pwsh
+        run: ./scripts/bundle-ghostscript.ps1
+      - run: cargo test --manifest-path src-tauri/Cargo.toml --no-default-features
+      - name: Test PDF engine with bundled Windows runtime
+        shell: pwsh
+        run: |
+          $env:INKWELL_GS = (Resolve-Path 'src-tauri/resources/ghostscript/bin/gswin64c.exe').Path
+          cargo test --manifest-path src-tauri/Cargo.toml --no-default-features --test conversion -- --ignored
+      - run: npm run tauri build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Inkwell-Windows-x64-installer
+          path: src-tauri/target/release/bundle/nsis/*-setup.exe

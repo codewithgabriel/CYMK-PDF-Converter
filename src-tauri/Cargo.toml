@@ -1,0 +1,38 @@
+[package]
+name = "inkwell"
+default-run = "inkwell"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-or-later"
+
+[features]
+default = ["desktop"]
+desktop = ["dep:tauri", "dep:tauri-build", "dep:tauri-plugin-dialog"]
+
+[build-dependencies]
+tauri-build = { version = "2", optional = true , features = [] }
+
+[dependencies]
+tauri = { version = "2", optional = true , features = [] }
+tauri-plugin-dialog = { version = "2", optional = true }
+serde = { version = "1", features = ["derive"] }
+tempfile = "3"
+lopdf = "0.36"
+
+[[bin]]
+name = "inkwell"
+required-features = ["desktop"]
+
+[[bin]]
+name = "inkwell-convert"
+path = "src/cli.rs"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+
+# Keep local desktop builds practical on machines with limited disk space.
+[profile.dev]
+debug = 0
+incremental = false
