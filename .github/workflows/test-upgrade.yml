@@ -1,0 +1,35 @@
+name: Verify Windows upgrade
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  upgrade:
+    if: github.event.repository.private == true
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download released installers and verify checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          gh release download v0.1.0 --repo codewithgabriel/CYMK-PDF-Converter --pattern Inkwell_0.1.0_x64-setup.exe --pattern SHA256SUMS.txt --dir previous
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh release download "v$version" --pattern "Inkwell_${version}_x64-setup.exe" --pattern SHA256SUMS.txt --dir current
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($dir in @('previous', 'current')) {
+            $exe = Get-ChildItem "$dir/*-setup.exe"
+            $expected = ((Get-Content "$dir/SHA256SUMS.txt" | Where-Object { $_ -match [regex]::Escape($exe.Name) }) -split '\s+')[0]
+            $actual = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash
+            if ($actual -ne $expected) { throw "Installer checksum mismatch in $dir" }
+          }
+      - name: Upgrade 0.1.0 to the private edition and launch it
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          ./scripts/test-windows-installer.ps1 -PreviousInstaller previous/Inkwell_0.1.0_x64-setup.exe -SetupPath "current/Inkwell_${version}_x64-setup.exe"
