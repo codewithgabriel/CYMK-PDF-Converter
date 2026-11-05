@@ -6,3 +6,6 @@ src-tauri/resources/ghostscript/
 tmp/
 output/
 /tests/
+.env
+.env.*
+!.env.example

@@ -1,1 +1,25 @@
-{"name":"inkwell","version":"0.1.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1","build":"tsc && vite build","tauri":"tauri"},"dependencies":{"@tauri-apps/api":"^2.0.0","@tauri-apps/plugin-dialog":"^2.0.0"},"devDependencies":{"@tauri-apps/cli":"^2.0.0","typescript":"~5.7.2","vite":"^6.0.0"}}
+{
+  "name": "inkwell",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc && vite build",
+    "tauri": "tauri",
+    "test:ui": "cargo run --manifest-path src-tauri/Cargo.toml --no-default-features --example studio_check -- output/studio-qa && playwright test"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.0.0",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
+    "docx-preview": "^0.4.1",
+    "jszip": "^3.10.2",
+    "lucide": "^1.68.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tauri-apps/cli": "^2.0.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.0"
+  }
+}

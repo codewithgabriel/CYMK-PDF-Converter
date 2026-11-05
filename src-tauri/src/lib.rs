@@ -1,4 +1,6 @@
 use lopdf::Document;
+pub mod docx;
+pub mod studio;
 use serde::Serialize;
 use std::{fs::File, io::Read, path::Path, process::Command};
 

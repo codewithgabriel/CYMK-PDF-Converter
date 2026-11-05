@@ -1,4 +1,18 @@
-# Validation of the vector-preserving ink optimizer
+# Validation
+
+## DOCX image studio — 5 November 2026
+
+- The Rust desktop executable compiled locally, with frontend TypeScript and production Vite build checks.
+- Seven Rust DOCX tests pass, covering independent image placements sharing one media file, header replacement, unchanged-package export, unsafe ZIP input, candidate/session ownership, context inclusion/exclusion, SVG override removal, and API dimension constraints. Clippy passes with warnings denied.
+- Five headless interface tests pass, using the real Rust-generated DOCX preview package and mocking only native IPC/OpenAI responses. They cover opening, image comment controls, empty/custom prompts, context opt-out, comparison, acceptance, restoring originals, exporting only accepted drafts, failure recovery, continuous-document pagination, and minimum-window layout.
+- A single real OpenAI Images Edits request used a synthetic 640 × 400 mockup with an empty user prompt and synthetic nearby text. `gpt-image-2.5-sunburst` returned a 1536 × 960 PNG. The photorealistic output was visually inspected and successfully exported as one replacement in a new DOCX. No private document was sent for this check.
+- User-provided `Beauty_and_Cosmetology_JSSC2.docx`: 28.24 MB, 71 JPEG media files, 78 image placements, 5,480 paragraphs, 344 tables. All 78 images were detected and supported. It has no explicit or cached page breaks; local preview pagination produced 164 pages, with 78 comment buttons and no JavaScript errors. Opening and layout in the isolated headless QA session took approximately 22 seconds. The page count is a preview estimate, not a claim about Word's pagination.
+- Every expanded ZIP member in an unmodified export of the supplied sample matched the original byte-for-byte. Its original file was not changed. Selected pages and image navigation were visually inspected; this is not a complete page-by-page Word rendering comparison.
+- `.env` is ignored. Its key is loaded by debug Rust builds at runtime, not embedded in the frontend, installer or documents. Packaged clients need their own session key or runtime environment configuration.
+
+This feature has not yet been packaged and tested in a new Windows installer. Generated-image fidelity and text accuracy require user review; browser-based DOCX layout can differ from Word.
+
+## Vector-preserving PDF ink optimizer
 
 The earlier full-page TIFF/raster pipeline has been removed. PDF conversion now uses Ghostscript pdfwrite in two passes: CMYK normalization with input transfer functions removed, then density application with transfer functions baked into colors and images. There is no page-resolution conversion. Embedded images retain their dimensions and use high-quality JPEG compression (quality 95); text and drawing commands remain PDF objects.
 
