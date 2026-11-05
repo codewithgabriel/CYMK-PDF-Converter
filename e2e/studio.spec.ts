@@ -4,13 +4,13 @@ import JSZip from 'jszip';
 const fixture = JSON.parse(fs.readFileSync('output/studio-qa/fixture.json', 'utf8'));
 const alternate = 'data:image/png;base64,' + fs.readFileSync('output/studio-qa/alternate.png').toString('base64');
 
-async function desktop(page: Page, failGeneration = false, documentFixture = fixture) {
-  await page.addInitScript(({ fixture, alternate, failGeneration }) => {
+async function desktop(page: Page, failGeneration = false, documentFixture = fixture, keyIncluded = false) {
+  await page.addInitScript(({ fixture, alternate, failGeneration, keyIncluded }) => {
     const calls: {cmd:string; args:any}[] = [];
     Object.assign(window, { isTauri: true, __calls: calls, __TAURI_INTERNALS__: {
       invoke: async (cmd: string, args: any = {}) => {
         calls.push({cmd,args});
-        if (cmd === 'studio_status') return { configured: true, model: 'gpt-image-2.5-sunburst', largeOutput: true };
+        if (cmd === 'studio_status') return { configured: true, model: 'gpt-image-2.5-sunburst', largeOutput: true, keyIncluded };
         if (cmd === 'plugin:dialog|open') return fixture.path;
         if (cmd === 'studio_open') return fixture;
         if (cmd === 'plugin:dialog|save') return '/tmp/result-inkwell.docx';
@@ -25,7 +25,7 @@ async function desktop(page: Page, failGeneration = false, documentFixture = fix
         throw new Error(`Unexpected command ${cmd}`);
       }
     }});
-  }, { fixture: documentFixture, alternate, failGeneration });
+  }, { fixture: documentFixture, alternate, failGeneration, keyIncluded });
   await page.goto('/');
   await page.locator('.document-drop').click();
   await expect(page.locator('#page-count')).toHaveText('2 pages');
@@ -61,6 +61,18 @@ test('open, contextual generation, review, per-image acceptance, export and rest
   await expect(page.locator('#save-state')).toContainText('Unsaved');
   expect(await page.locator('#document-preview img[data-image-id="image-1"]').getAttribute('src')).not.toBe(alternate);
   expect(errors).toEqual([]);
+});
+
+test('private edition is ready to generate without entering an API key', async ({page}) => {
+  await desktop(page, false, fixture, true);
+  await expect(page.locator('#connection-label')).toHaveText('AI ready');
+  await page.locator('#ai-settings').click();
+  await expect(page.getByRole('dialog')).toContainText('No setup needed');
+  await expect(page.locator('#api-key')).toHaveCount(0);
+  await page.getByRole('button', {name:'Done',exact:true}).click();
+  await page.locator('#generate-image').click();
+  await expect(page.getByRole('button',{name:'Use this image',exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>(window as any).__calls.filter((c:any)=>c.cmd==='studio_set_key').length)).toBe(0);
 });
 
 test('image comments select the right picture; optional context and custom prompt are respected', async ({page}) => {

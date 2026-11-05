@@ -8,6 +8,8 @@ license = "AGPL-3.0-or-later"
 [features]
 default = ["desktop"]
 desktop = ["dep:tauri", "dep:tauri-build", "dep:tauri-plugin-dialog"]
+# Opt-in for a privately distributed installer. Never enable in public builds.
+private-key = []
 
 [build-dependencies]
 tauri-build = { version = "2", optional = true , features = [] }

@@ -9,7 +9,7 @@ export interface OpenedDocument {
 export interface GeneratedImage {
   id: string; imageId: string; dataUrl: string; width: number; height: number; model: string;
 }
-export interface StudioStatus { configured: boolean; model: string; largeOutput: boolean }
+export interface StudioStatus { configured: boolean; model: string; largeOutput: boolean; keyIncluded?: boolean }
 export interface ImageWork {
   prompt: string; style: string; useContext: boolean; quality: string; resolution: string;
   drafts: GeneratedImage[]; currentDraft: string | null; accepted: string | null;

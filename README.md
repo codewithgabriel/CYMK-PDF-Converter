@@ -26,9 +26,11 @@ OPENAI_API_KEY=your_api_key
 OPENAI_IMAGE_MODEL=gpt-image-2.5-sunburst
 ```
 
-The existing `OPENAI_KEY` name is also supported. `.env` is ignored by Git and is read at runtime by debug Rust builds only. It is **never bundled into the frontend or installer**. Restart the desktop process after editing it.
+The existing `OPENAI_KEY` name is also supported. `.env` is ignored by Git and is read at runtime by debug Rust builds only. The file is never bundled into the frontend or installer. Public builds contain no developer key. Restart the desktop process after editing it.
 
-Packaged users can enter their own key through **AI settings**; it remains in native memory for that app session. Runtime `OPENAI_API_KEY` / `OPENAI_KEY` environment variables also work. API charges go to the connected OpenAI project. Distributing access billed to one company-owned key requires an authenticated hosted service; do not ship that shared key in a desktop executable or `.env` file.
+Public-build users can enter their own key through **AI settings**; it remains in native memory for that app session. Runtime `OPENAI_API_KEY` / `OPENAI_KEY` environment variables also work. API charges go to the connected OpenAI project. For broad distribution with a shared company account, use an authenticated hosted service.
+
+The explicitly requested two-person private edition enables the opt-in Cargo feature `private-key` and receives `INKWELL_PRIVATE_API_KEY` from a GitHub Actions repository secret at compile time. It starts with AI configured and does not ask users for a key. This key can be extracted from the executable: distribute that installer only to its intended recipients. The **Private Windows installer** workflow refuses to run or publish in a public repository. The public workflow does not enable this feature. `.env` and keys are never committed; the build checks inclusion without logging the key. Private releases require repository access and use HTTPS for downloads.
 
 Only the selected embedded image, the user's instructions, and optional nearby text/alternative text are sent to OpenAI, and only on Generate. The complete document is not uploaded. Local opening, preview, export, and PDF optimization do not call OpenAI.
 

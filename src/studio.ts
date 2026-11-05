@@ -242,6 +242,15 @@ export class ImageStudio {
   async settings() {
     if (!this.requireDesktop()) return;
     const dialog = document.createElement('dialog'); dialog.className = 'modal settings-modal';
+    if (this.status.keyIncluded && this.status.configured) {
+      dialog.innerHTML = `<div class="modal-heading"><div class="modal-title"><span class="settings-key">${icon('Sparkles', 23)}</span><button class="icon-button" data-close aria-label="Close AI settings">${icon('X', 20)}</button></div><span class="eyebrow">READY WHEN YOU ARE</span><h2>AI is ready to use</h2><p>Your private edition is already connected. Open a document and choose an image to get started.</p></div><div class="settings-connection"><span class="connection-dot connected"></span>No setup needed<span>${escape(this.status.model)}</span></div><p class="settings-privacy">${icon('ShieldCheck', 16)} Only your selected image and optional nearby text are sent to OpenAI when you click Generate. Usage is billed to the account configured by the app owner.</p><div class="modal-actions"><button class="button primary" data-close>Done</button></div>`;
+      document.body.append(dialog);
+      const close = () => { dialog.close(); dialog.remove(); };
+      dialog.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
+      dialog.oncancel = e => { e.preventDefault(); close(); };
+      dialog.showModal();
+      return;
+    }
     dialog.innerHTML = `<div class="modal-heading"><div class="modal-title"><span class="settings-key">${icon('KeyRound', 23)}</span><button class="icon-button" data-close aria-label="Close AI settings">${icon('X', 20)}</button></div><span class="eyebrow">YOUR CREATIVE CONNECTION</span><h2>AI settings</h2><p>Connect your OpenAI account to reimagine document images.</p></div><div class="settings-connection"><span class="connection-dot ${this.status.configured ? 'connected' : ''}"></span>${this.status.configured ? 'API key configured' : 'No API key connected'}<span>${escape(this.status.model)}</span></div><label class="key-label" for="api-key">${this.status.configured ? 'Replace API key' : 'OpenAI API key'}</label><input id="api-key" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…"><p class="small-note">Keys entered here stay in memory for this app session. Your key is never included in an exported document.</p><p class="settings-privacy">${icon('ShieldCheck', 16)} Your selected image and optional nearby text are sent to OpenAI only when you click Generate. API usage is billed to the connected project.</p><p id="settings-error" class="inline-error" role="alert"></p><div class="modal-actions">${this.status.configured ? '<button class="text-button" data-disconnect>Disconnect</button>' : ''}<button class="button secondary" data-close>Cancel</button><button class="button primary" data-save>Connect key</button></div>`;
     document.body.append(dialog);
     const close = () => { dialog.querySelector<HTMLInputElement>('#api-key')!.value = ''; dialog.close(); dialog.remove(); };

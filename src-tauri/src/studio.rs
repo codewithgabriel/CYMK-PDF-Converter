@@ -13,6 +13,17 @@ use std::{
 const DEFAULT_MODEL: &str = "gpt-image-2.5-sunburst";
 const MAX_RESPONSE: u64 = 40 * 1024 * 1024;
 
+fn included_key() -> Option<&'static str> {
+    #[cfg(feature = "private-key")]
+    {
+        Some(env!("INKWELL_PRIVATE_API_KEY"))
+    }
+    #[cfg(not(feature = "private-key"))]
+    {
+        None
+    }
+}
+
 #[derive(Clone, Default)]
 pub struct Studio(pub Arc<Mutex<StudioInner>>);
 
@@ -39,6 +50,7 @@ struct Candidate {
 #[serde(rename_all = "camelCase")]
 pub struct StudioStatus {
     pub configured: bool,
+    pub key_included: bool,
     pub model: String,
     pub large_output: bool,
 }
@@ -81,8 +93,8 @@ pub struct GeneratedImage {
 impl Studio {
     pub fn from_environment() -> Self {
         let mut config = HashMap::new();
-        // Never embed .env contents or a developer's key into a compiled app.
-        // Runtime environment variables also work in packaged installations.
+        // .env is development-only. Public installers never include a key.
+        // A private-key build explicitly opts into a native compiled-in key.
         if cfg!(debug_assertions) {
             let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
             if let Some(parent) = manifest.parent() {
@@ -99,7 +111,9 @@ impl Studio {
                 .or_else(|| config.get(name).cloned())
                 .filter(|s| !s.trim().is_empty())
         };
-        let key = value("OPENAI_API_KEY").or_else(|| value("OPENAI_KEY"));
+        let key = value("OPENAI_API_KEY")
+            .or_else(|| value("OPENAI_KEY"))
+            .or_else(|| included_key().map(str::to_owned));
         let model = value("OPENAI_IMAGE_MODEL").unwrap_or(DEFAULT_MODEL.into());
         Self(Arc::new(Mutex::new(StudioInner {
             key,
@@ -112,6 +126,7 @@ impl Studio {
         let inner = self.0.lock().map_err(|_| "Studio is unavailable.")?;
         Ok(StudioStatus {
             configured: inner.key.is_some(),
+            key_included: included_key().is_some(),
             model: inner.model.clone(),
             large_output: !inner.model.starts_with("gpt-image-1"),
         })

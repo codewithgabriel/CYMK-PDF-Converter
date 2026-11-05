@@ -13,7 +13,7 @@ const studio = new ImageStudio(studioView);
 mountPdf(pdfView);
 studio.onStatus = configured => {
   document.getElementById('connection-dot')!.classList.toggle('connected', configured);
-  document.getElementById('connection-label')!.textContent = configured ? 'API key configured' : 'Connect OpenAI';
+  document.getElementById('connection-label')!.textContent = configured ? 'AI ready' : 'Connect OpenAI';
 };
 void studio.refreshStatus();
 const switchTool = (name: 'studio' | 'pdf') => {
