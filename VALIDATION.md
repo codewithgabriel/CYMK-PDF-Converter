@@ -11,7 +11,11 @@
 - Every expanded ZIP member in an unmodified export of the supplied sample matched the original byte-for-byte. Its original file was not changed. Selected pages and image navigation were visually inspected; this is not a complete page-by-page Word rendering comparison.
 - `.env` is ignored and loaded at runtime by debug Rust builds. Public installers do not include its key. The requested two-person private edition separately opts into a key supplied by a secure build secret; its executable must stay private. The key is never returned to the frontend or placed in exported documents.
 
-This feature has not yet been packaged and tested in a new Windows installer. Generated-image fidelity and text accuracy require user review; browser-based DOCX layout can differ from Word.
+The private Windows 0.2.0 installer was built from `93b4987eb311d03c5f71a1fb206a2ee87c1066bf` and published only in the private build repository. Windows CI passed the Rust tests, the bundled Ghostscript integration test, all six interface tests, the included-key check (without logging the key), silent installation, and desktop startup. Build run: `41948092458`.
+
+A separate Windows job downloaded both released installers, verified their checksums, installed 0.1.0, upgraded to 0.2.0 in the same directory without a manual uninstall, and launched the updated desktop app successfully. Upgrade run: `41950355286`. These are automated runner checks; hands-on use on each recipient's Windows PC and generated-image fidelity still require review. Browser-based DOCX layout can differ from Word.
+
+Private installer: `Inkwell_0.2.0_x64-setup.exe`, 286,866,743 bytes. SHA-256: `bf7bb6d1809475cf793ce39f1ad8954f28afc2580cc491727157e9af8fa5066f`. The key-bearing installer is not in the public repository's releases. An expiring asset download URL was checked without GitHub authentication; such links must not be treated as permanent public downloads.
 
 ## Vector-preserving PDF ink optimizer
 
@@ -30,4 +34,4 @@ Passed:
 - Independent Ghostscript `ink_cov` rendering verifies approximately 50% CMYK coverage at 50% density and zero at 0%, compared with 100% output. This measures digital ink coverage, not physical printer consumption.
 - Independent Poppler renders at 100%, 50% and 0% were visually inspected. Colors remain colored, transparent pixels stay white, and density reduces as expected.
 
-The Windows installer and physical printer consumption remain unverified. PDF rewriting can change interactive features and invalidates digital signatures; keep the original.
+Windows installation, startup, and the bundled PDF engine passed automated checks. Physical printer consumption remains unverified. PDF rewriting can change interactive features and invalidates digital signatures; keep the original.
